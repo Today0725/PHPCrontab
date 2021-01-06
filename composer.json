@@ -1,0 +1,23 @@
+{
+    "name": "today/php-crontab",
+    "description": "phpcrontab",
+    "type": "php",
+    "keywords": ["crontab","php crontab"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "chenjintian",
+            "email": "1109934767@qq.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=7.2.0",
+        "mtdowling/cron-expression": "1.2"
+    },
+    "autoload":{
+        "psr-4": {
+            "Crontab\\": "Crontab/"
+        }
+    }
+}
