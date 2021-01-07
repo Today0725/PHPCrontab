@@ -16,6 +16,7 @@ class Core
     public $config = [];
     public $path = "";
     public $task_file = "/tmp/task";
+    public $master_pid_file = "/tmp/master_pid";
     public $log = "/tmp/crontab_log";
     public $error_log = "/tmp/crontab_error_log";
 
@@ -26,11 +27,49 @@ class Core
             $this->daemon();
         }
 
+        if ($params[count($params) - 1] == "stop") {
+            $this->stopProcess();
+        }
+
+        //保存主进程的id,且判断是否已经存在pid了
+        $this->savaMasterId();
+
         //管理进程
         $this->getIniContent($path,$params)->startManager();
 
         //文件监控进程
         $this->startMonitorFile();
+    }
+
+
+    public function savaMasterId(){
+
+        if (file_exists($this->master_pid_file)) {
+            die("Already running\n");
+        }
+
+        $master_pid = posix_getpid();
+        file_put_contents($this->master_pid_file, $master_pid);
+    }
+
+    public function stopProcess(){
+        $master_pid = file_get_contents($this->master_pid_file);
+        exec("ps --ppid {$master_pid} | awk '/[0-9]/{print $1}' | xargs", $output, $status);
+        if ($status == 0) {
+            posix_kill($master_pid, SIGKILL);
+            $childs = explode(' ', current($output));
+            foreach ($childs as $id) {
+                posix_kill($id, SIGKILL);
+            }
+        }
+
+        while (true) {
+            if (! posix_kill($master_pid, 0)) {
+                @unlink('/tmp/master_pid');
+                break;
+            }
+        }
+        exit;
     }
 
     /**
